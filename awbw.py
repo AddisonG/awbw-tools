@@ -4,20 +4,16 @@ from enum import Enum
 import json
 import html
 import re
+import sys
 import requests
 
 # Analyse user's opening strategy
 
 class GameType(Enum):
-    ALL = "std"
+    ALL = "all"
     STANDARD = "std"
     FOG = "fog"
     HIGH_FUNDS = "hf"
-
-cookie = json.load(open("creds.json"))
-if cookie["awbw_password"] is None:
-    print("Please get a password using F12 dev tools. It should look like '%2ABCD1234'.")
-    exit(1)
 
 def get_user_replays(username: str, game_type: GameType = GameType.ALL):
     response = requests.get(
@@ -62,6 +58,9 @@ def analyse_game(game_id: str, player: str):
     for turn in range(0 + player_num, 20 + player_num, 2):
         units = analyse_turn(game_id, turn)
         if units is None:
+            if turn <= 1:
+                print("No game info")
+                return {}
             break
         # print(units)
         for unit, num in units.items():
@@ -137,8 +136,21 @@ def print_action(action):
         unit_name = action["unit"]["units_name"]
         print(f"Move {unit_name}.")
 
-player_name = "corr0s1ve"
+
+cookie = json.load(open("creds.json"))
+if cookie["awbw_password"] is None:
+    print("Please get a password using F12 dev tools. It should look like '%2ABCD1234'.")
+    exit(1)
+
+if len(sys.argv) > 1:
+    player_name = sys.argv[1]
+else:
+    player_name = cookie["awbw_username"]
+
 replays = get_user_replays(player_name, GameType.FOG)
 
-for replay in replays:
-    analyse_game(replay, player_name)
+try:
+    for replay in replays:
+        analyse_game(replay, player_name)
+except Exception:
+    print("Exception. Exiting.")
