@@ -4,6 +4,7 @@ from enum import Enum
 import json
 import html
 import re
+import os
 import sys
 import requests
 
@@ -30,7 +31,7 @@ def get_user_replays(username: str, game_type: GameType = GameType.ALL):
     return game_ids
 
 
-def analyse_game(game_id: str, player: str):
+def analyse_game(game_id: str, player: str, turns: int):
 
     body = {
         "gameId": game_id,
@@ -55,7 +56,7 @@ def analyse_game(game_id: str, player: str):
 
     all_units = {}
     unit_count = 0
-    for turn in range(0 + player_num, 20 + player_num, 2):
+    for turn in range(0 + player_num, (turns * 2) + player_num, 2):
         units = analyse_turn(game_id, turn)
         if units is None:
             if turn <= 1:
@@ -76,7 +77,7 @@ def analyse_game(game_id: str, player: str):
     for key, val in all_units.items():
         unit_ratios[key] = str(round(val / unit_count * 100, 2)) + "%"
 
-    print("==10-TURN RATIOS==")
+    print(f"=={turns}-TURN RATIOS==")
     print(unit_ratios)
 
     return unit_ratios
@@ -137,11 +138,16 @@ def print_action(action):
         print(f"Move {unit_name}.")
 
 
-cookie = json.load(open("creds.json"))
-if cookie["awbw_password"] is None:
-    print("Please get a password using F12 dev tools. It should look like '%2ABCD1234'.")
-    exit(1)
+def setup():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    cookie = json.load(open(script_dir + "/creds.json"))
+    if cookie["awbw_password"] is None:
+        print("Please get a password using F12 dev tools. It should start with '%2A' or '*', followed by 40 hex characters.")
+        exit(1)
 
+    return cookie
+
+cookie = setup()
 if len(sys.argv) > 1:
     player_name = sys.argv[1]
 else:
@@ -151,6 +157,6 @@ replays = get_user_replays(player_name, GameType.FOG)
 
 try:
     for replay in replays:
-        analyse_game(replay, player_name)
+        analyse_game(replay, player_name, 12)
 except Exception:
     print("Exception. Exiting.")
