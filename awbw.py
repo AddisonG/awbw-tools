@@ -30,6 +30,20 @@ def get_user_replays(username: str, game_type: GameType = GameType.ALL):
 
     return game_ids
 
+def get_map_replays(map_id: str, game_type: GameType = GameType.ALL):
+    response = requests.get(
+        f"https://awbw.amarriner.com/gamescompleted.php?maps_id={map_id}",
+        cookies=cookie,
+    )
+    content = html.unescape(response.text)
+
+    pattern = re.compile(r'2030.php\?games_id=(\d+)&ndx=0')
+    game_ids = []
+    for game_id in re.findall(pattern, content):
+        game_ids.append(game_id)
+
+    return game_ids
+
 
 def analyse_game(game_id: str, player: str, turns: int):
 
@@ -46,7 +60,7 @@ def analyse_game(game_id: str, player: str, turns: int):
     )
     players = list(response.json()["gameState"]["players"].values())
 
-    if player == players[0]["users_username"]:
+    if player == 0 or player == players[0]["users_username"]:
         player_num = 0
     else:
         player_num = 1
@@ -153,10 +167,17 @@ if len(sys.argv) > 1:
 else:
     player_name = cookie["awbw_username"]
 
-replays = get_user_replays(player_name, GameType.FOG)
+# replays = get_user_replays(player_name, GameType.FOG)
+# try:
+#     for replay in replays:
+#         analyse_game(replay, player_name, 12)
+# except Exception:
+#     print("Exception. Exiting.")
 
+
+replays = get_map_replays(79404, GameType.FOG)
 try:
     for replay in replays:
-        analyse_game(replay, player_name, 12)
+        analyse_game(replay, 0, 8)
 except Exception:
     print("Exception. Exiting.")
