@@ -68,7 +68,7 @@ def analyse_game(game_id: str, player: str, turns: int):
         player_num = 1
     player_co = players[player_num]["co_name"]
 
-    print(f"\nANALYSING GAME {game_id}. {player} playing as {player_co}")
+    print(f"ANALYSING GAME {game_id}. {player} playing as {player_co}")
 
     all_units = {}
     unit_count = 0
@@ -94,7 +94,8 @@ def analyse_game(game_id: str, player: str, turns: int):
         unit_ratios[key] = str(round(val / unit_count * 100, 2)) + "%"
 
     print(f"=={turns}-TURN RATIOS==")
-    print(unit_ratios)
+    print(unit_ratios or "No non-infantry units produced")
+    print()
 
     return unit_ratios
 
@@ -163,23 +164,23 @@ def setup():
 
     return cookie
 
-cookie = setup()
-if len(sys.argv) > 1:
-    player_name = sys.argv[1]
-else:
-    player_name = cookie["awbw_username"]
 
-# replays = get_user_replays(player_name, GameType.FOG)
-# try:
-#     for replay in replays:
-#         analyse_game(replay, player_name, 12)
-# except Exception:
-#     print("Exception. Exiting.")
+if __name__ == "__main__":
+    cookie = setup()
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ("--help", "-h"):
+            print("Usage: {} [username]".format(sys.argv[0]))
+            sys.exit(1)
+        player_name = sys.argv[1]
+    else:
+        player_name = cookie["awbw_username"]
 
-
-replays = get_map_replays(79404, GameType.FOG)
-try:
-    for replay in replays:
-        analyse_game(replay, 0, 8)
-except Exception:
-    print("Exception. Exiting.")
+    # TODO - arg to change mode, or turn numbers
+    replays = get_user_replays(player_name, GameType.FOG)
+    if not replays:
+        print("Could not find any games to analyse")
+    try:
+        for replay in replays:
+            analyse_game(replay, player_name, 12)
+    except Exception:
+        print("Exception. Exiting.")
