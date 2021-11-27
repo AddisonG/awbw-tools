@@ -10,11 +10,13 @@ import requests
 
 # Analyse user's opening strategy
 
+
 class GameType(Enum):
     ALL = "all"
     STANDARD = "std"
     FOG = "fog"
     HIGH_FUNDS = "hf"
+
 
 def get_user_replays(username: str, game_type: GameType = GameType.ALL):
     response = requests.get(
@@ -29,6 +31,7 @@ def get_user_replays(username: str, game_type: GameType = GameType.ALL):
         game_ids.append(game_id)
 
     return game_ids
+
 
 def get_map_replays(map_id: str, game_type: GameType = GameType.ALL):
     response = requests.get(
@@ -46,7 +49,6 @@ def get_map_replays(map_id: str, game_type: GameType = GameType.ALL):
 
 
 def analyse_game(game_id: str, player: str, turns: int):
-
     body = {
         "gameId": game_id,
         "turn": 0,
