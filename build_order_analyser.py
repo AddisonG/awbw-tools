@@ -124,7 +124,7 @@ def find_unit_production_days(game_id: str):
         turn_built = data["turn_built"]
         if turn < turn_built:
             turn = turn_built
-            print(f"=== DAY {turn / 2} ({player}) ===")
+            print(f"=== DAY {(turn / 2) + 1} ({player}) ===")
 
         # The -1 turn units are a little glitchy. Don't show
         if turn_built >= 0:
@@ -133,10 +133,10 @@ def find_unit_production_days(game_id: str):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 1 and "-" not in sys.argv[1]:
         game_id = sys.argv[1]
     else:
-        print("Usage: {} <game-id>".format(sys.argv[1]))
+        print("Usage: {} <game-id>".format(sys.argv[0]))
         sys.exit(1)
 
     COOKIE = get_cookie()
