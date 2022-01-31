@@ -73,7 +73,7 @@ def get_units_on_turn(game_id: str, turn: int):
                     "unit_name": discovered_unit["units_name"],
                     "turn_built": None,
                 }
-        elif action["action"] == "Build":
+        if action["action"] == "Build":
             new_unit = action["newUnit"]
             # The newly built unit won't already be in the list. Add it
             units[int(new_unit["units_id"])] = {
