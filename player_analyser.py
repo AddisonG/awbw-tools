@@ -115,10 +115,10 @@ def analyse_turn(game_id: str, turn: int):
     )
 
     if response.status_code != 200:
-        return None
+        return None, None, None
     if "err" in response.json():
         print(response.json()["message"])
-        return None
+        return None, None, None
 
     units_built, captures = analyse_actions(response.json())
 
@@ -167,7 +167,11 @@ def setup():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     cookie = json.load(open(script_dir + "/creds.json"))
     if cookie["awbw_password"] is None:
-        print("Please get a password using F12 dev tools. It should start with '%2A' or '*', followed by 40 hex characters.")
+        print(
+            "Please get a password using F12 dev tools.\n",
+            "It should start with '%2A' or '*', followed by 40 hex characters.\n",
+            "Put it in creds.json."
+        )
         exit(1)
 
     return cookie

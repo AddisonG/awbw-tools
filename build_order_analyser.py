@@ -28,7 +28,7 @@ def get_turn_json(game_id: str, turn: int):
     body = {
         "gameId": game_id,
         "turn": turn,
-        "initial": True, # Don't know what this does
+        "initial": True,  # Don't know what this does
     }
 
     response = requests.post(
@@ -62,19 +62,32 @@ def get_units_on_turn(game_id: str, turn: int):
         units[int(unit_id)] = {
             "player": player,
             "unit_name": unit_name,
-            "turn_built": None,
+            "turn_built": -1 if turn == 0 else None,
         }
 
     for action in turn_json["actions"]:
-        if action["action"] != "Build":
-            continue
-        # The newly built unit won't already be in the list. Add it
-        new_unit = action["newUnit"]
-        units[int(new_unit["units_id"])] = {
-            "player": players[new_unit["units_players_id"]],
-            "unit_name": new_unit["units_name"],
-            "turn_built": turn,
-        }
+        if action.get("discovered") and "units" in action["discovered"]:
+            for discovered_unit in action["discovered"]["units"]:
+                units[int(discovered_unit["units_id"])] = {
+                    "player": players[discovered_unit["units_players_id"]],
+                    "unit_name": discovered_unit["units_name"],
+                    "turn_built": None,
+                }
+        elif action["action"] == "Build":
+            new_unit = action["newUnit"]
+            # The newly built unit won't already be in the list. Add it
+            units[int(new_unit["units_id"])] = {
+                "player": players[new_unit["units_players_id"]],
+                "unit_name": new_unit["units_name"],
+                "turn_built": turn,
+            }
+        elif action["action"] == "Move":
+            moving_unit = action["unit"]
+            units[int(moving_unit["units_id"])] = {
+                "player": players[moving_unit["units_players_id"]],
+                "unit_name": moving_unit["units_name"],
+                "turn_built": None,
+            }
 
     return units
 
@@ -85,51 +98,64 @@ def find_unit_production_days(game_id: str):
 
     # Get every single unit ever seen
     for turn in range(0, 100):
-        sys.stdout.write(f"\rGathering data for turn {turn}...")
+        sys.stdout.write(f"\rGathering data for day {turn / 2 + 1}...")
         sys.stdout.flush()
         try:
             # DO NOT overwrite old units - they may have their turn filled in
             new_units = get_units_on_turn(game_id, turn)
             units = {**new_units, **units}
-        except Exception:
+        except Exception as e:
+            print(e)
             break
         max_turn = turn
 
     # Fill in missing data about the enemy units, based on unit ID.
     # Units with ID's less than one from this turn, and that don't have a
     # turn already, must have been made on the previous turn
-    turn = 0
+    turn = -1
     while turn <= max_turn:
-        units_built_this_turn = [unit_id for unit_id, data in units.items() if data["turn_built"] == turn]
+        units_built_this_turn = {unit_id: data for unit_id, data in units.items() if data["turn_built"] == turn}
 
         if units_built_this_turn:
-            unit_from_this_turn = [unit_id for unit_id, data in units.items() if data["turn_built"] == turn][0]
+            id_from_this_turn = list(units_built_this_turn.keys())[0]
+        elif turn <= 0:
+            # Wait until you build a unit - that will be your first turn
+            turn += 1
+            continue
         else:
             # It's probably your turn, and you haven't built yet?
             # If you somehow didn't build for a turn, this script will break
-            unit_from_this_turn = sys.maxsize
+            id_from_this_turn = 2 ** 64
 
         for unit_id, data in units.items():
-            if unit_id < unit_from_this_turn and data["turn_built"] == None:
+            if unit_id < id_from_this_turn and data["turn_built"] is None:
+                # if data["player"] == units_built_this_turn[id_from_this_turn]["player"]:
+                #     # Should only happen for your own pre-deployed units
+                #     data["turn_built"] = turn - 2
+                # else:
+                # Should only happen for opponent units - built last turn
                 data["turn_built"] = turn - 1
 
         # Go to MY next turn
         turn += 2
 
     # Iterate from lowest to highest unit number
-    turn = -1
+    turn = -(2 ** 64)
     for unit_id, data in sorted(units.items()):
         unit_name = data["unit_name"]
         player = data["player"]
         turn_built = data["turn_built"]
-        if turn < turn_built:
+        if turn != turn_built:
             turn = turn_built
             print(f"=== DAY {(turn / 2) + 1} ({player}) ===")
 
-        # The -1 turn units are a little glitchy. Don't show
-        if turn_built >= 0:
-            padding = " " * (12 - len(unit_name))
-            print(f"{unit_name}{padding}({unit_id})")
+        print(unit_name)
+
+# TODO - FIND:
+# total money spent on repairs (enemy)
+# total money spent on units (enemy)
+# estimated money earned (entire game)
+# estimated troop value, number, and hidden troops
 
 
 if __name__ == "__main__":
