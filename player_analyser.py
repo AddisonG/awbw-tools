@@ -25,7 +25,7 @@ def get_user_replays(username: str, game_type: GameType = GameType.ALL):
     )
     content = html.unescape(response.text)
 
-    pattern = re.compile(r'2030.php\?games_id=(\d+)&ndx=0')
+    pattern = re.compile(r'game.php\?games_id=(\d+)&ndx=0')
     game_ids = []
     for game_id in re.findall(pattern, content):
         game_ids.append(game_id)
@@ -40,7 +40,7 @@ def get_map_replays(map_id: str, game_type: GameType = GameType.ALL):
     )
     content = html.unescape(response.text)
 
-    pattern = re.compile(r'2030.php\?games_id=(\d+)&ndx=0')
+    pattern = re.compile(r'game.php\?games_id=(\d+)&ndx=0')
     game_ids = []
     for game_id in re.findall(pattern, content):
         game_ids.append(game_id)
@@ -71,8 +71,9 @@ def analyse_game(game_id: str, player: str, turns: int):
         player_num = 1
     player_co = players[player_num]["co_name"]
 
-    print(f"ANALYSING GAME {game_id}. {player} playing as {player_co}")
+    print(f"ANALYSING GAME {game_id}. {player} playing as {player_co} (player {player_num + 1})")
 
+    total_value = 0
     all_units = {}
     unit_count = 0
     for turn in range(0 + player_num, (turns * 2) + player_num, 2):
@@ -82,6 +83,8 @@ def analyse_game(game_id: str, player: str, turns: int):
                 print("No game info")
                 return {}
             break
+        total_value += income
+        print(f"Total value: {total_value}")
         for unit, num in units.items():
             if unit == "Infantry":
                 continue
@@ -127,9 +130,10 @@ def analyse_turn(game_id: str, turn: int):
     player_info = response.json()["gameState"]["players"][pid]
     funds = player_info["players_funds"]
     income = player_info["players_income"]
-    print(f"Day {turn//2}. ${funds - income} leftover + ${income}. Captures: {captures}.")
+    print(f"Day {(turn//2) + 1}. ${funds - income} leftover + ${income}. Captures: {captures}.")
 
     return units_built, captures, income
+
 
 def analyse_actions(response):
     units_built = {}
@@ -147,6 +151,14 @@ def analyse_actions(response):
         # CAPTURE
         if action_type == "Capt":
             if action["buildingInfo"]["buildings_capture"] == 20:
+                if "com tower" in action["buildingInfo"]["terrain_name"].lower():
+                    print("Com tower captured")
+                    # Don't count com towers for income
+                    continue
+                if action["buildingInfo"]["terrain_name"].lower().endswith("lab"):
+                    print("Lab captured. Why?")
+                    # Don't count labs at all
+                    continue
                 captures += 1
 
     return units_built, captures
@@ -188,7 +200,8 @@ if __name__ == "__main__":
         player_name = cookie["awbw_username"]
 
     # TODO - arg to change mode, or turn numbers
-    replays = get_user_replays(player_name, GameType.FOG)
+    #replays = get_user_replays(player_name, GameType.FOG)
+    replays = get_map_replays(player_name, GameType.FOG)
     if not replays:
         print("Could not find any games to analyse")
     try:
