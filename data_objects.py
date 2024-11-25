@@ -31,6 +31,7 @@ class Player:
     players_order: Optional[int]
 
     players_income: Optional[int] = None
+    first: Optional[bool] = None
 
     def __repr__(self) -> str:
         return f"<Player {self.users_username} ({self.players_id})>"
@@ -71,6 +72,8 @@ class Unit:
     # Manually added attrs
     player_name: Optional[str] = None
     turn_built: Optional[int] = None
+    extra_distance: Optional[int] = None
+    last_seen_turn: Optional[int] = None
 
     def __init__(self, players: Dict[int, Player], **kwargs: Any) -> None:
         # Get the field names from the dataclass
@@ -84,8 +87,34 @@ class Unit:
             if key in valid_fields:
                 setattr(self, key, value)
 
-        # Set player name based on ID
+        # Set player name based on ID - FIXME this is such a dumb hack
         self.player_name = players[self.units_players_id].users_username
+
+        self.__fix_unit_cost__()
+
+    def __fix_unit_cost__(self) -> None:
+        """
+        If a unit passes across the screen, but does not finish movement in
+        vision, many of these will be empty, causing issues. Most concerning is
+        `units_cost`, which I have jankily hardcoded to be slightly fixed for
+        common use cases.
+        """
+        lookup = {
+            "infantry": 1000,
+            "mech": 3000,
+            "tank": 7000,
+            "artillery": 6000,
+            "recon": 4000,
+            "b-copter": 9000,
+            "t-copter": 5000,
+            "anti-air": 8000,
+            "md.tank": 15000,
+            "black boat": 9500,
+            # FIXME hardcode more lol, or use that actual lookup that old mate has in the gamestate json
+        }
+
+        if not self.units_cost and self.units_name:
+            self.units_cost = lookup.get(self.units_name.lower(), 0)
 
     def __repr__(self) -> str:
         return f"<Unit {self.units_name} ({self.units_id}) {self.player_name} turn {self.turn_built}>"
