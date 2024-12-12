@@ -5,10 +5,15 @@ from data_objects import Player, Unit
 from dataclasses import fields
 
 import argparse
-import requests
 import json
-import sys
+import logging
 import os
+import requests
+import sys
+import time
+
+
+logger = logging.getLogger(__name__)
 
 
 def get_cookie() -> str:
@@ -57,7 +62,7 @@ class Analyser():
         if response.status_code != 200:
             raise Exception(f"Got bad response code: {response.status_code}")
         if "err" in response.json():
-            raise Exception(response.json()["message"])
+            raise RuntimeError(response.json()["message"])
 
         return response.json()
 
@@ -131,10 +136,11 @@ class Analyser():
                     # and he doesn't care.
                     moving_unit.extra_distance = action["dist"] - (len(action["path"]) - 1)
             elif action["action"] == "Fire":
-                # FIXME - Add hidden artillery?
                 defender = action.get("defender")
                 attacker = action.get("attacker")
-                if attacker["units_id"] in units:
+                if attacker == "?":
+                    units[9999999999999] = Unit(units_id=999999999999, units_name="Unknown Artillery", units_players_id=action["copValues"]["attacker"]["playerId"], players=self.players)
+                elif attacker["units_id"] in units:
                     units[attacker["units_id"]].units_hit_points = attacker["units_hit_points"]
                 if defender["units_id"] in units:
                     units[defender["units_id"]].units_hit_points = defender["units_hit_points"]
@@ -180,8 +186,13 @@ class Analyser():
                         # Stops us from forgetting a unit was built on turn zero
                         new_unit.turn_built = all_units[unit_id].turn_built
                     all_units[unit_id] = new_unit
-            except Exception as e:
+            except RuntimeError as e:
+                # Normal "healthy" exception (probably no more turns left)
                 print(e)
+                break
+            except Exception as e:
+                logger.exception(e)
+                time.sleep(3)
                 break
             max_turn = turn
 
