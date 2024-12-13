@@ -1,8 +1,17 @@
 ## Build Order Analyser
 
-This shows exactly what turn every unit you can see was built on. This can be
-good for knowing if the enemy saved funds, or if they have a hidden unit that
-you haven't seen yet.
+Shows exactly what turn every unit you have ever seen was built on. Good for
+knowing if the enemy saved funds, or if they have a hidden unit that you
+haven't seen yet.
+
+It can also let you make educated guesses as to the location of other units.
+
+For example:
+
+> 1. I can see that **this recon was built on turn 3.**
+> 2. That's very early - it means **my opponent's capture game is delayed.**
+> 3. Because of that, I know **my opponent cannot possibly have built a tank
+>    until turn 7** at the earliest (instead of turn 6), without base skipping
 
 ### Usage:
 
@@ -14,27 +23,29 @@ you haven't seen yet.
 
 ```
 ...
-=== DAY 5.0 (my-username) ===
-Infantry
-Infantry
-Recon
-=== DAY 5.5 (opponent) ===
-Infantry
-Recon
-Recon
-=== DAY 6.0 (my-username) ===
-Artillery
-Infantry
-Infantry
-=== DAY 6.5 (opponent) ===
-Tank
-Infantry
-Infantry
-=== DAY 7.0 (my-username) ===
-Tank
-Infantry
-Infantry
-...
+
+=== DAY 5.0 (opponent) ===
+Total: $7000, (+$1000)
+Infantry (10HP) - At 4x4
+
+=== DAY 5.5 (my-username) ===
+Total: $19000, (+$9000)
+Tank (10HP) - At 12x9
+Infantry (10HP) - At 11x9
+Infantry (10HP) - At 4x1
+
+=== DAY 6.0 (opponent) ===
+Total: $15000, (+$8000)
+Tank (8HP) - At 13x13
+Infantry (10HP) - At 10x13
+
+=== DAY 6.5 (my-username) ===
+Total: $28000, (+$9000)
+Tank (5HP) - At 13x8
+Infantry (10HP) - At 9x6
+Infantry (10HP) - At 7x1
+
+... more lines
 ```
 
 
