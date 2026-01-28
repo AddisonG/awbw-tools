@@ -78,7 +78,7 @@ def analyse_game(game_id: str, player: str, turns: int):
     unit_count = 0
     for turn in range(0 + player_num, (turns * 2) + player_num, 2):
         units, captures, income = analyse_turn(game_id, turn)
-        if units is None:
+        if units is None or income is None:
             if turn <= 1:
                 print("No game info")
                 return {}
@@ -105,7 +105,7 @@ def analyse_game(game_id: str, player: str, turns: int):
     return unit_ratios
 
 
-def analyse_turn(game_id: str, turn: int):
+def analyse_turn(game_id: str, turn: int) -> tuple[dict[str, int], int, int] | tuple[None, None, None]:
     body = {
         "gameId": game_id,
         "turn": turn,
@@ -130,12 +130,12 @@ def analyse_turn(game_id: str, turn: int):
     player_info = response.json()["gameState"]["players"][pid]
     funds = player_info["players_funds"]
     income = player_info["players_income"]
-    print(f"Day {(turn//2) + 1}. ${funds - income} leftover + ${income}. Captures: {captures}.")
+    print(f"Day {(turn // 2) + 1}. ${funds - income} leftover + ${income}. Captures: {captures}.")
 
     return units_built, captures, income
 
 
-def analyse_actions(response):
+def analyse_actions(response: dict):
     units_built = {}
     captures = 0
 
@@ -200,8 +200,8 @@ if __name__ == "__main__":
         player_name = cookie["awbw_username"]
 
     # TODO - arg to change mode, or turn numbers
-    #replays = get_user_replays(player_name, GameType.FOG)
-    replays = get_map_replays(player_name, GameType.FOG)
+    replays = get_user_replays(player_name, GameType.FOG)
+    # replays = get_map_replays(player_name, GameType.FOG)
     if not replays:
         print("Could not find any games to analyse")
     try:

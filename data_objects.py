@@ -5,12 +5,15 @@ from typing import Any, Dict, Optional
 @dataclass
 class Player:
     users_username: str
+    users_id: int
     players_id: int
     players_team: Optional[str]
     players_countries_id: Optional[int]
     players_eliminated: Optional[str]
     players_co_id: Optional[int]
     co_name: Optional[str]
+    co_image_path: Optional[str]
+    co_grayscale_image_path: Optional[str]
     co_max_power: Optional[int]
     co_max_spower: Optional[int]
     players_co_power: Optional[int]
@@ -28,7 +31,7 @@ class Player:
     other_buildings: Optional[int]
     players_turn_clock: Optional[int]
     players_turn_start: Optional[str]
-    players_order: Optional[int]
+    players_order: int
 
     players_income: Optional[int] = None
     first: Optional[bool] = None
@@ -100,17 +103,32 @@ class Unit:
         common use cases.
         """
         lookup = {
+            "black boat": 7500,
+            "piperunner": 20000,
+            "black bomb": 25000,
             "infantry": 1000,
             "mech": 3000,
+            "md.tank": 16000,
             "tank": 7000,
-            "artillery": 6000,
             "recon": 4000,
+            "apc": 5000,
+            "artillery": 6000,
+            "rocket": 15000,
+            "anti-air": 8000,
+            "missile": 12000,
+            "fighter": 20000,
+            "bomber": 22000,
             "b-copter": 9000,
             "t-copter": 5000,
-            "anti-air": 8000,
-            "md.tank": 15000,
-            "black boat": 9500,
-            # FIXME hardcode more lol, or use that actual lookup that old mate has in the gamestate json
+            "battleship": 28000,
+            "cruiser": 18000,
+            "lander": 12000,
+            "sub": 20000,
+            "neotank": 22000,
+            "mega tank": 28000,
+            "carrier": 30000,
+            "stealth": 24000,
+            # FIXME use that actual lookup that old mate has in the gamestate json (generic_units)
         }
 
         if not self.units_cost and self.units_name:

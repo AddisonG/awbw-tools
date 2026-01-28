@@ -66,13 +66,11 @@ class Analyser():
 
         return response.json()
 
-
-    def get_players(self, players):
+    def get_players(self, player_dict: dict[int, dict]) -> Dict[int, Player]:
         """
         FIXME - actually make a call here, and do it early, not in getunits
         """
-        players = list(Player(**data) for data in players.values())
-
+        players = list(Player(**data) for data in player_dict.values())
         # We don't support 3+ players
         assert len(players) == 2
 
@@ -95,7 +93,6 @@ class Analyser():
 
         # current_player = players[turn_json["gameState"]["currentTurnPId"]]
         return players
-
 
     def get_units_on_turn(self, turn: int) -> Dict[int, Unit]:
         units: Dict[int, Unit] = {}
@@ -165,7 +162,6 @@ class Analyser():
                     )
 
         return units
-
 
     def find_unit_production_days(self, only_enemy: bool) -> None:
         all_units: Dict[int, Unit] = {}
@@ -296,6 +292,7 @@ def main():
 
     analyser = Analyser(args.game_id, args.debug)
     analyser.find_unit_production_days(only_enemy=args.only_enemy)
+
 
 if __name__ == "__main__":
     main()
